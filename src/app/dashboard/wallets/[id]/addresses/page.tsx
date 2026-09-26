@@ -15,6 +15,7 @@ import { DashboardBackground } from "@/components/dashboard/DashboardBackground"
 import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { NewAddressModal } from "@/components/addresses/CustomerReferenceField";
 import { formatStroops, sumStroops } from "@/lib/amount";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
@@ -33,6 +34,7 @@ export default function AddressesPage({
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [askingRef, setAskingRef] = useState(false);
   const [selected, setSelected] = useState<Address | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,12 +66,12 @@ export default function AddressesPage({
       });
   }, [token, id]);
 
-  async function handleNewAddress() {
+  async function handleNewAddress(customerRef?: string) {
     if (!token) return;
     setCreating(true);
     setError(null);
     try {
-      const addr = await createAddress(token, id);
+      const addr = await createAddress(token, id, customerRef);
       setAddresses((prev) => [addr, ...prev]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not generate a new address.");
@@ -89,6 +91,7 @@ export default function AddressesPage({
   return (
     <div className="relative flex min-h-screen flex-col bg-background">
       <DashboardBackground />
+      {askingRef && <NewAddressModal onSubmit={handleNewAddress} onClose={() => setAskingRef(false)} />}
 
       <div className="relative z-10 bg-burgundy/20 py-2 text-center text-xs text-burgundy-bright">
         You are currently on <strong>test mode</strong> (Stellar testnet).
@@ -148,7 +151,7 @@ export default function AddressesPage({
               <div className="flex flex-wrap gap-3">
                 <ActionButton
                   label={creating ? "Generating…" : "+ New address"}
-                  onClick={handleNewAddress}
+                  onClick={() => setAskingRef(true)}
                   loading={creating}
                 />
                 <ActionButton
