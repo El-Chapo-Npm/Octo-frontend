@@ -17,6 +17,7 @@ import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletU
 import { Pagination } from "@/components/dashboard/Pagination";
 import { PageSpinner } from "@/components/OctoSpinner";
 import { formatStroops } from "@/lib/amount";
+import { ExportTransactionsCsvButton } from "@/components/export/ExportTransactionsCsvButton";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
 // /dashboard/wallets/:id/* pages, which all read wallet-scoped data.
@@ -214,6 +215,7 @@ export default function TransactionsPage({
                 onClick={refresh}
                 loading={refreshing}
               />
+              <ExportTransactionsCsvButton token={token} walletId={id} />
             </div>
 
             {error && (
