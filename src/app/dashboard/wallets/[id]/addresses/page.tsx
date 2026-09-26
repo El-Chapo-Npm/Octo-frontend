@@ -15,6 +15,8 @@ import { DashboardBackground } from "@/components/dashboard/DashboardBackground"
 import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { AddressSearchBox } from "@/components/addresses/AddressSearchBox";
+import { filterAddressesByRef } from "@/lib/addressSearch";
 import { NewAddressModal } from "@/components/addresses/CustomerReferenceField";
 import { formatStroops, sumStroops } from "@/lib/amount";
 
@@ -35,6 +37,7 @@ export default function AddressesPage({
   const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [askingRef, setAskingRef] = useState(false);
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Address | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,6 +177,8 @@ export default function AddressesPage({
               </p>
             )}
 
+            <AddressSearchBox onChange={setQuery} />
+
             <Panel title={`${addresses.length} address${addresses.length === 1 ? "" : "es"}`}>
               {addresses.length === 0 ? (
                 <Empty>
@@ -191,7 +196,7 @@ export default function AddressesPage({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-divider">
-                      {addresses.map((a) => (
+                      {filterAddressesByRef(addresses, query).map((a) => (
                         <AddressRow key={a.id} address={a} onSelect={() => setSelected(a)} />
                       ))}
                     </tbody>
