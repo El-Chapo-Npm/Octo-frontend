@@ -50,6 +50,9 @@ import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
 import { AssetIcon } from "@/components/dashboard/AssetIcon";
 import { DashboardBackground } from "@/components/dashboard/DashboardBackground";
 import { Modal, CopyField } from "@/components/dashboard/Modal";
+import { DepositQrCodes } from "@/components/qr/DepositQrCodes";
+import { TrustlineDetails } from "@/components/trustlines/TrustlineDetails";
+import { DownloadBackupButton } from "@/components/backup/DownloadBackupButton";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { ApiError } from "@/lib/api";
 import { PageSpinner } from "@/components/OctoSpinner";
@@ -229,6 +232,9 @@ export default function WalletOverview({
                 onClick={() => token && getBalances(token, id).then(setBalances)}
               />
             </div>
+
+            {token && <TrustlineDetails token={token} walletId={id} balances={balances} onChanged={refresh} />}
+            {token && <DownloadBackupButton token={token} walletId={id} address={wallet?.address ?? null} />}
 
             <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
               {/* assets */}
@@ -563,6 +569,7 @@ function DepositModal({
             address, send to the base address with memo (id){" "}
             <span className="text-foreground">{latest.memo_id}</span>.
           </div>
+          <DepositQrCodes muxedAddress={latest.muxed_address} baseAddress={baseAddress} memoId={latest.memo_id} />
         </div>
       ) : (
         <div className="mt-5 rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted">

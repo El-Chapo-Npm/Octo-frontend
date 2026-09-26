@@ -3,6 +3,8 @@
 import { use, useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { CopyButton } from "@/components/CopyButton";
+import { AddressQrCode } from "@/components/qr/AddressQrCode";
+import { sep7PayUri } from "@/lib/sep7";
 import {
   getPublicPaymentLink,
   createPaymentIntent,
@@ -493,6 +495,20 @@ export default function PayPage({
                     className="text-xs text-gray-500 hover:text-gray-900"
                   />
                 </div>
+                <div className="mt-3 flex justify-center">
+                  <AddressQrCode
+                    value={sep7PayUri({
+                      destination: intent.deposit_address,
+                      amount: formatStroops(intent.amount_usdc_stroops),
+                      assetCode: USDC_TESTNET.code,
+                      assetIssuer: USDC_TESTNET.issuer,
+                    })}
+                    label="Scan with a Stellar wallet to pay the exact amount"
+                  />
+                </div>
+                <p className="mt-2 text-[11px] text-gray-500">
+                  Some exchanges don&apos;t support M… addresses; pay from a self-custody wallet.
+                </p>
                 <button
                   type="button"
                   onClick={handleCheckPayment}
