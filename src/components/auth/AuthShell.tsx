@@ -48,15 +48,15 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
               <p className="mx-auto mt-8 max-w-sm text-center text-xs text-muted">
                 By signing up, you agree to our{" "}
-                <Link href="#" className="underline">
+                <Link href="/terms" className="underline">
                   Terms
                 </Link>{" "}
                 and{" "}
-                <Link href="#" className="underline">
+                <Link href="/terms" className="underline">
                   Conditions of use
                 </Link>{" "}
                 and{" "}
-                <Link href="#" className="underline">
+                <Link href="/privacy" className="underline">
                   Privacy policy
                 </Link>
                 .
