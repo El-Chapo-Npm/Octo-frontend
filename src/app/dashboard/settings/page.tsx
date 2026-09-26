@@ -7,6 +7,7 @@ import { updateUsername, type User } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,7 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
+      {token && <ChangePasswordForm token={token} />}
     </DashboardShell>
   );
 }

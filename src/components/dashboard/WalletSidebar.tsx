@@ -28,6 +28,7 @@ export function WalletSidebar({
       href: `${base}/sponsorship`,
       icon: <GasPumpIcon />,
     },
+    { label: "Gas tank", href: `${base}/gas-tank`, icon: "⛽" },
     { label: "Developers", href: `${base}/api`, icon: "›_" },
   ];
 

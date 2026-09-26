@@ -211,6 +211,7 @@ export function AuthForm({
               className="w-full bg-transparent text-sm text-foreground placeholder:text-muted/60 focus:outline-none"
             />
           </div>
+          {!isSignup && <Link href="/forgot-password" className="mt-2 inline-block text-xs text-muted hover:text-foreground">Forgot password?</Link>}
         </div>
 
         {error && (
