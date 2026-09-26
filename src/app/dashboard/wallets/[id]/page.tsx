@@ -50,6 +50,7 @@ import { AssetIcon } from "@/components/dashboard/AssetIcon";
 import { DashboardBackground } from "@/components/dashboard/DashboardBackground";
 import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { DepositQrCodes } from "@/components/qr/DepositQrCodes";
+import { TrustlineDetails } from "@/components/trustlines/TrustlineDetails";
 import { DownloadBackupButton } from "@/components/backup/DownloadBackupButton";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { ApiError } from "@/lib/api";
@@ -202,6 +203,7 @@ export default function WalletOverview({
               />
             </div>
 
+            {token && <TrustlineDetails token={token} walletId={id} balances={balances} onChanged={refresh} />}
             {token && <DownloadBackupButton token={token} walletId={id} address={wallet?.address ?? null} />}
 
             <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
