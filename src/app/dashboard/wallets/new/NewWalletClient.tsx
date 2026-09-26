@@ -212,10 +212,14 @@ export function NewWalletClient() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="wallet-name"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Wallet name
                   </label>
                   <input
+                    id="wallet-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Acme master wallet"
@@ -224,10 +228,14 @@ export function NewWalletClient() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="wallet-description"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Wallet description
                   </label>
                   <textarea
+                    id="wallet-description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="What is this wallet for?"

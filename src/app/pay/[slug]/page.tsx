@@ -398,8 +398,9 @@ export default function PayPage({
               <StepHeader current="Personal Information" />
 
               {link.amount_usdc_stroops === null && (
-                <Field label="Enter Amount">
+                <Field label="Enter Amount" htmlFor="payer-amount">
                   <input
+                    id="payer-amount"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
@@ -408,9 +409,10 @@ export default function PayPage({
                 </Field>
               )}
 
-              <Field label="Enter Personal Information">
+              <Field label="Enter Personal Information" htmlFor="payer-name">
                 <div className="space-y-2">
                   <input
+                    id="payer-name"
                     value={payerName}
                     onChange={(e) => setPayerName(e.target.value)}
                     placeholder="Full name"
@@ -421,6 +423,7 @@ export default function PayPage({
                     value={payerEmail}
                     onChange={(e) => setPayerEmail(e.target.value)}
                     placeholder="Email address"
+                    aria-label="Email address"
                     type="email"
                     required
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-black"
@@ -584,10 +587,18 @@ function StepHeader({ current }: { current: "Personal Information" | "Payment Me
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <label className="text-sm font-medium text-gray-900">{label}</label>
+      <label htmlFor={htmlFor} className="text-sm font-medium text-gray-900">{label}</label>
       <div className="mt-1">{children}</div>
     </div>
   );
