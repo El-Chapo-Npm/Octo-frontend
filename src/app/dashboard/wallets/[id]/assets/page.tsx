@@ -15,6 +15,7 @@ import { AssetIcon } from "@/components/dashboard/AssetIcon";
 import { DashboardBackground } from "@/components/dashboard/DashboardBackground";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { SpendableReservedBreakdown } from "@/components/assets/SpendableReservedBreakdown";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — this page reads wallet
 // balances, matching the other /dashboard/wallets/:id/* pages.
@@ -136,6 +137,8 @@ export default function AssetsPage({
               />
               <Stat label="Reserve" value="1.0 XLM" sub="Base account reserve" />
             </div>
+
+            <SpendableReservedBreakdown token={token} walletId={id} balances={balances} />
 
             {error && (
               <p className="rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
