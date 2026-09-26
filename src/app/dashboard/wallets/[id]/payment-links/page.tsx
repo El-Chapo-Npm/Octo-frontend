@@ -23,6 +23,7 @@ import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { Pagination } from "@/components/dashboard/Pagination";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { PayWithOctoSnippet } from "@/components/payment-links/PayWithOctoSnippet";
 import { ExportPaymentLinkPaymentsCsvButton } from "@/components/export/ExportPaymentLinkPaymentsCsvButton";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
@@ -390,6 +391,7 @@ function LinkDetail({
           </p>
         </div>
         <CopyField label="Public link" value={link.url ?? payUrl(link.slug)} qr />
+        <PayWithOctoSnippet url={link.url ?? payUrl(link.slug)} />
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="rounded-lg bg-surface-sunken p-3">
             <p className="text-muted">Amount</p>
