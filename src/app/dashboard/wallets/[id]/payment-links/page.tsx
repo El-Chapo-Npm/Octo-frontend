@@ -23,6 +23,7 @@ import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { Pagination } from "@/components/dashboard/Pagination";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { ExportPaymentLinkPaymentsCsvButton } from "@/components/export/ExportPaymentLinkPaymentsCsvButton";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
 // /dashboard/wallets/:id/* pages, which all read wallet-scoped data.
@@ -410,6 +411,7 @@ function LinkDetail({
 
         <div>
           <p className="text-xs font-medium text-foreground">Payments</p>
+          <ExportPaymentLinkPaymentsCsvButton token={token} walletId={walletId} linkId={link.id} />
           {paymentsError ? (
             <p className="mt-2 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-xs text-danger">
               {paymentsError}
