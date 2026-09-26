@@ -52,6 +52,7 @@ import { Modal, CopyField } from "@/components/dashboard/Modal";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { ApiError } from "@/lib/api";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { EditWalletDetails } from "@/components/wallets/EditWalletDetails";
 import { NewAddressModal } from "@/components/addresses/CustomerReferenceField";
 
 export default function WalletOverview({
@@ -168,6 +169,7 @@ export default function WalletOverview({
               <p className="mt-1 text-sm text-muted">
                 {wallet?.description ?? "Stellar master wallet"}
               </p>
+              <EditWalletDetails token={token} walletId={id} wallet={wallet} onSaved={setWallet} />
               <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
                 <span className="text-muted">
                   Address:{" "}
