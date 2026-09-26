@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { CopyButton } from "@/components/CopyButton";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 export function Modal({
   title,
@@ -14,6 +15,8 @@ export function Modal({
   children: React.ReactNode;
 }) {
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef);
 
   // Escape closes, matching native dialog behaviour for keyboard users.
   useEffect(() => {
@@ -35,7 +38,11 @@ export function Modal({
         className="absolute inset-0 bg-scrim backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-burgundy-soft/40 p-6 shadow-2xl">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-burgundy-soft/40 p-6 shadow-2xl outline-none"
+      >
         <div className="flex items-center justify-between">
           <h3 id={titleId} className="text-lg font-semibold text-foreground">
             {title}
