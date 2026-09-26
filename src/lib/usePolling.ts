@@ -15,7 +15,9 @@ export function usePolling(
 ): void {
   // Keep a stable ref so the interval callback always sees the latest `fn` without re-starting.
   const fnRef = useRef(fn);
-  fnRef.current = fn;
+  useEffect(() => {
+    fnRef.current = fn;
+  }, [fn]);
 
   useEffect(() => {
     const controller = new AbortController();

@@ -1,6 +1,6 @@
 /** Edit a payment link's mutable fields (URL and amount stay unchanged). */
 
-import { apiFetch } from "./api";
+import { apiFetch, path } from "./api";
 import type { AuthToken, WalletId } from "./brands";
 import type { PaymentLink } from "./payment-links";
 
@@ -18,7 +18,7 @@ export function updatePaymentLink(
   linkId: string,
   edit: PaymentLinkEdit,
 ) {
-  return apiFetch<PaymentLink>(`/v1/wallets/${walletId}/payment-links/${linkId}`, {
+  return apiFetch<PaymentLink>(path`/v1/wallets/${walletId}/payment-links/${linkId}`, {
     method: "PUT",
     token,
     body: JSON.stringify({

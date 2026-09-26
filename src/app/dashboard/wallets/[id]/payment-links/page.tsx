@@ -97,7 +97,7 @@ export default function PaymentLinksPage({
   // Silently re-fetch so a just-received payment (collected total) shows up without a manual
   // refresh. Page 1 only — refreshing a deeper page would shift rows under the user.
   const pollFn = useCallback(
-    async (_signal: AbortSignal) => {
+    async () => {
       if (!token || pageIndex !== 0) return;
       await load(null, { silent: true });
     },

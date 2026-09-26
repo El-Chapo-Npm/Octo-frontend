@@ -100,7 +100,7 @@ export default function WalletOverview({
   // Silently re-fetch balances + recent transactions in the background so a new deposit shows up
   // without a manual refresh — no loading indicator here, that's only for explicit refresh actions.
   const pollFn = useCallback(
-    async (_signal: AbortSignal) => {
+    async () => {
       if (!token) return;
       await Promise.all([
         getBalances(token, id).then(setBalances).catch(() => {}),

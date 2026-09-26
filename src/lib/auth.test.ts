@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { safeNextPath } from "./safeNext";
 
 /**
  * Build a localStorage-compatible stub where stored keys are enumerable own properties,
@@ -82,9 +83,7 @@ describe("#285 signOut()", () => {
 // ---------- #286 — same-origin guard for ?next= ----------
 
 describe("#286 same-origin guard", () => {
-  // The validation lives in src/app/login/page.tsx (server component).
-  // We replicate the regex here to test it in isolation.
-  const isSafeNext = (v: string) => /^\/(?!\/)/.test(v);
+  const isSafeNext = (v: unknown) => safeNextPath(v) !== undefined;
 
   it("accepts a plain relative path", () => {
     expect(isSafeNext("/dashboard")).toBe(true);
@@ -104,6 +103,16 @@ describe("#286 same-origin guard", () => {
 
   it("rejects a javascript: URL", () => {
     expect(isSafeNext("javascript:alert(1)")).toBe(false);
+  });
+
+  it("rejects backslash and control-character tricks", () => {
+    expect(isSafeNext("/\\evil.com")).toBe(false);
+    expect(isSafeNext("/\t/evil.com")).toBe(false);
+    expect(isSafeNext("/\n/evil.com")).toBe(false);
+  });
+
+  it("rejects a repeated ?next= array", () => {
+    expect(isSafeNext(["/a", "/b"])).toBe(false);
   });
 
   it("rejects an empty string", () => {

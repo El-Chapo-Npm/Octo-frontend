@@ -86,7 +86,7 @@ export default function TransactionsPage({
   // needing a manual refresh. Only page 1 auto-refreshes — re-fetching a deeper page would fight
   // the user as rows shift underneath them.
   const pollFn = useCallback(
-    async (_signal: AbortSignal) => {
+    async () => {
       if (!token || pageIndex !== 0) return;
       await load(null, { silent: true });
     },
