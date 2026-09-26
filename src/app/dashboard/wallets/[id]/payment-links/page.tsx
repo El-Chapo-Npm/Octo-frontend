@@ -24,6 +24,8 @@ import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletU
 import { Pagination } from "@/components/dashboard/Pagination";
 import { PageSpinner } from "@/components/OctoSpinner";
 import { usePolling } from "@/lib/usePolling";
+import { PayWithOctoSnippet } from "@/components/payment-links/PayWithOctoSnippet";
+import { ExportPaymentLinkPaymentsCsvButton } from "@/components/export/ExportPaymentLinkPaymentsCsvButton";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
 // /dashboard/wallets/:id/* pages, which all read wallet-scoped data.
@@ -330,6 +332,7 @@ function LinkRow({
         })}
       </td>
       <td className="py-3 text-right">
+        <Link href={`payment-links/${link.id}/edit`} onClick={(e) => e.stopPropagation()} className="mr-3 text-xs text-muted hover:text-foreground">Edit</Link>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -392,6 +395,7 @@ function LinkDetail({
           </p>
         </div>
         <CopyField label="Public link" value={link.url ?? payUrl(link.slug)} qr />
+        <PayWithOctoSnippet url={link.url ?? payUrl(link.slug)} />
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="rounded-lg bg-surface-sunken p-3">
             <p className="text-muted">Amount</p>
@@ -414,6 +418,7 @@ function LinkDetail({
 
         <div>
           <p className="text-xs font-medium text-foreground">Payments</p>
+          <ExportPaymentLinkPaymentsCsvButton token={token} walletId={walletId} linkId={link.id} />
           {paymentsError ? (
             <p className="mt-2 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-xs text-danger">
               {paymentsError}
