@@ -56,6 +56,8 @@ import { DownloadBackupButton } from "@/components/backup/DownloadBackupButton";
 import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletUI";
 import { ApiError } from "@/lib/api";
 import { PageSpinner } from "@/components/OctoSpinner";
+import { EditWalletDetails } from "@/components/wallets/EditWalletDetails";
+import { NewAddressModal } from "@/components/addresses/CustomerReferenceField";
 
 export default function WalletOverview({
   params,
@@ -72,6 +74,7 @@ export default function WalletOverview({
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [creating, setCreating] = useState(false);
+  const [askingRef, setAskingRef] = useState(false);
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showTrustline, setShowTrustline] = useState(false);
@@ -108,11 +111,15 @@ export default function WalletOverview({
   );
   usePolling(pollFn, 5000);
 
-  async function onNewAddress() {
+  function onNewAddress() {
+    setAskingRef(true);
+  }
+
+  async function createWithRef(customerRef?: string) {
     if (!token) return;
     setCreating(true);
     try {
-      const addr = await createAddress(token, id);
+      const addr = await createAddress(token, id, customerRef);
       setAddresses((a) => [addr, ...a]);
     } finally {
       setCreating(false);
@@ -143,6 +150,7 @@ export default function WalletOverview({
   return (
     <div className="relative flex min-h-screen flex-col bg-background">
       <DashboardBackground />
+      {askingRef && <NewAddressModal onSubmit={createWithRef} onClose={() => setAskingRef(false)} />}
 
       <div className="relative z-10 bg-burgundy/20 py-2 text-center text-xs text-burgundy-bright">
         You are currently on <strong>test mode</strong> (Stellar testnet).
@@ -181,6 +189,7 @@ export default function WalletOverview({
               <p className="mt-1 text-sm text-muted">
                 {wallet?.description ?? "Stellar master wallet"}
               </p>
+              <EditWalletDetails token={token} walletId={id} wallet={wallet} onSaved={setWallet} />
               <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
                 <span className="text-muted">
                   Address:{" "}
