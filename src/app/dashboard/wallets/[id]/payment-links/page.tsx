@@ -327,6 +327,7 @@ function LinkRow({
         })}
       </td>
       <td className="py-3 text-right">
+        <Link href={`payment-links/${link.id}/edit`} onClick={(e) => e.stopPropagation()} className="mr-3 text-xs text-muted hover:text-foreground">Edit</Link>
         <button
           onClick={(e) => {
             e.stopPropagation();
