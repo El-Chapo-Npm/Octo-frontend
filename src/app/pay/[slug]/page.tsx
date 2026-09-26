@@ -18,6 +18,7 @@ import {
 import { USDC_TESTNET } from "@/lib/wallets";
 import { buildUnsignedPayment } from "@/lib/sdk";
 import { OctoSpinner } from "@/components/OctoSpinner";
+import { PayerPrivacyNotice } from "@/components/checkout/PayerPrivacyNotice";
 import confetti from "canvas-confetti";
 import { formatStroops } from "@/lib/amount";
 
@@ -428,6 +429,7 @@ export default function PayPage({
                 <p className="mt-1 text-[11px] text-gray-500">
                   We use this to send you a confirmation of your payment.
                 </p>
+                <PayerPrivacyNotice merchantName={link.name} />
               </Field>
 
               {error && <ErrorBanner message={error} />}
