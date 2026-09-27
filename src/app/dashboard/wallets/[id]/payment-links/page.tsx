@@ -1,21 +1,18 @@
 "use client";
 
-import { use, useCallback, useEffect, useState, type FormEvent } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
-import { getWallet, type WalletView } from "@/lib/wallets";
+import { useWallet } from "@/lib/useWallet";
+import { PaymentLinkList } from "@/components/payment-links/PaymentLinkList";
+import { PaymentLinkDetail } from "@/components/payment-links/PaymentLinkDetail";
+import { CreatePaymentLinkForm } from "@/components/payment-links/CreatePaymentLinkForm";
 import {
   listPaymentLinksPage,
-  listPaymentLinkPayments,
-  createPaymentLink,
   setPaymentLinkActive,
-  usdAmountToStroops,
   type PaymentLink,
-  type PaymentLinkPayment,
 } from "@/lib/payment-links";
-import { uploadImage, validateImage } from "@/lib/uploads";
 import { asAuthToken, asWalletId } from "@/lib/brands";
-import { isTrustedImageUrl } from "@/lib/isTrustedImageUrl";
 import { formatStroops, sumStroops } from "@/lib/amount";
 import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
 import { DashboardBackground } from "@/components/dashboard/DashboardBackground";
@@ -24,8 +21,6 @@ import { Stat, ActionButton, Panel, Empty } from "@/components/dashboard/WalletU
 import { Pagination } from "@/components/dashboard/Pagination";
 import { PageSpinner } from "@/components/OctoSpinner";
 import { usePolling } from "@/lib/usePolling";
-import { PayWithOctoSnippet } from "@/components/payment-links/PayWithOctoSnippet";
-import { ExportPaymentLinkPaymentsCsvButton } from "@/components/export/ExportPaymentLinkPaymentsCsvButton";
 
 // Dynamic render so the strict nonce CSP (src/proxy.ts) applies — matches the other
 // /dashboard/wallets/:id/* pages, which all read wallet-scoped data.
@@ -44,7 +39,7 @@ export default function PaymentLinksPage({
   const { id } = use(params);
   const { user, token, loading, logout } = useAuth();
 
-  const [wallet, setWallet] = useState<WalletView | null>(null);
+  const { wallet } = useWallet(id);
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -88,9 +83,6 @@ export default function PaymentLinksPage({
 
   useEffect(() => {
     if (!token) return;
-    getWallet(token, id)
-      .then(setWallet)
-      .catch(() => setWallet(null));
     load(null);
   }, [token, id, load]);
 
@@ -225,16 +217,11 @@ export default function PaymentLinksPage({
                           <th className="pb-3 font-medium"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-divider">
-                        {links.map((link) => (
-                          <LinkRow
-                            key={link.id}
-                            link={link}
-                            onSelect={() => setSelected(link)}
-                            onToggleActive={() => handleToggleActive(link)}
-                          />
-                        ))}
-                      </tbody>
+                      <PaymentLinkList
+                        links={links}
+                        onSelect={setSelected}
+                        onToggleActive={handleToggleActive}
+                      />
                     </table>
                   </div>
                 )}
@@ -253,7 +240,7 @@ export default function PaymentLinksPage({
       </div>
 
       {showCreate && (
-        <CreateLinkModal
+        <CreatePaymentLinkForm
           walletId={id}
           token={token}
           creating={creating}
@@ -284,7 +271,7 @@ export default function PaymentLinksPage({
       )}
 
       {selected && (
-        <LinkDetail
+        <PaymentLinkDetail
           link={selected}
           walletId={id}
           token={token}
@@ -292,356 +279,5 @@ export default function PaymentLinksPage({
         />
       )}
     </div>
-  );
-}
-
-function LinkRow({
-  link,
-  onSelect,
-  onToggleActive,
-}: {
-  link: PaymentLink;
-  onSelect: () => void;
-  onToggleActive: () => void;
-}) {
-  return (
-    <tr onClick={onSelect} className="cursor-pointer transition-colors hover:bg-surface-raised">
-      <td className="py-3 pr-4 text-foreground">{link.name}</td>
-      <td className="py-3 pr-4 text-foreground">
-        {link.amount_usdc_stroops !== null
-          ? `$${formatStroops(link.amount_usdc_stroops)}`
-          : "Flexible"}
-      </td>
-      <td className="py-3 pr-4">
-        <span
-          className={`inline-flex items-center gap-1 text-xs ${
-            link.active ? "text-success" : "text-muted"
-          }`}
-        >
-          {link.active ? "●" : "○"} {link.active ? "Active" : "Inactive"}
-        </span>
-      </td>
-      <td className="py-3 pr-4 font-medium text-foreground">
-        ${formatStroops(link.collected_usdc_stroops)}
-      </td>
-      <td className="py-3 pr-4 text-muted">
-        {new Date(link.created_at).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </td>
-      <td className="py-3 text-right">
-        <Link href={`payment-links/${link.id}/edit`} onClick={(e) => e.stopPropagation()} className="mr-3 text-xs text-muted hover:text-foreground">Edit</Link>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleActive();
-          }}
-          className="text-xs text-muted hover:text-foreground"
-        >
-          {link.active ? "Deactivate" : "Activate"}
-        </button>
-      </td>
-    </tr>
-  );
-}
-
-function LinkDetail({
-  link,
-  walletId,
-  token,
-  onClose,
-}: {
-  link: PaymentLink;
-  walletId: string;
-  token: string | null;
-  onClose: () => void;
-}) {
-  const [payments, setPayments] = useState<PaymentLinkPayment[] | null>(null);
-  const [paymentsError, setPaymentsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    listPaymentLinkPayments(asAuthToken(token), asWalletId(walletId), link.id, { limit: 20 })
-      .then((page) => {
-        setPayments(page.data);
-        setPaymentsError(null);
-      })
-      .catch((e) =>
-        setPaymentsError(
-          e instanceof Error ? e.message : "Could not load payments.",
-        ),
-      );
-  }, [token, walletId, link.id]);
-
-  return (
-    <Modal title="Payment link details" onClose={onClose}>
-      <div className="space-y-4">
-        {isTrustedImageUrl(link.image_url) && (
-          <div className="flex justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={link.image_url!}
-              alt=""
-              className="h-20 w-20 rounded-lg border border-border object-cover"
-            />
-          </div>
-        )}
-        <div className="rounded-lg bg-surface-sunken p-3 text-center">
-          <p className="text-xs text-muted">Collected</p>
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            ${formatStroops(link.collected_usdc_stroops)}
-          </p>
-        </div>
-        <CopyField label="Public link" value={link.url ?? payUrl(link.slug)} qr />
-        <PayWithOctoSnippet url={link.url ?? payUrl(link.slug)} />
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="rounded-lg bg-surface-sunken p-3">
-            <p className="text-muted">Amount</p>
-            <p className="mt-1 font-mono text-foreground">
-              {link.amount_usdc_stroops !== null
-                ? `$${formatStroops(link.amount_usdc_stroops)}`
-                : "Flexible"}
-            </p>
-          </div>
-          <div className="rounded-lg bg-surface-sunken p-3">
-            <p className="text-muted">Status</p>
-            <p className="mt-1 font-mono text-foreground">
-              {link.active ? "Active" : "Inactive"}
-            </p>
-          </div>
-        </div>
-        {link.description && (
-          <p className="text-center text-sm text-muted">{link.description}</p>
-        )}
-
-        <div>
-          <p className="text-xs font-medium text-foreground">Payments</p>
-          <ExportPaymentLinkPaymentsCsvButton token={token} walletId={walletId} linkId={link.id} />
-          {paymentsError ? (
-            <p className="mt-2 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-xs text-danger">
-              {paymentsError}
-            </p>
-          ) : payments === null ? (
-            <p className="mt-2 text-xs text-muted">Loading…</p>
-          ) : payments.length === 0 ? (
-            <p className="mt-2 text-xs text-muted">
-              No payments yet. Payers appear here as soon as they start a payment.
-            </p>
-          ) : (
-            <div className="mt-2 max-h-56 overflow-y-auto rounded-lg border border-border">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-burgundy-soft/60">
-                  <tr className="text-left text-[10px] uppercase tracking-wide text-muted">
-                    <th className="px-3 py-2 font-medium">Payer</th>
-                    <th className="px-3 py-2 font-medium">Amount</th>
-                    <th className="px-3 py-2 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-divider">
-                  {payments.map((p) => (
-                    <tr key={p.id}>
-                      <td className="px-3 py-2">
-                        <p className="text-foreground">{p.payer_name ?? "—"}</p>
-                        {p.payer_email && (
-                          <p className="text-[10px] text-muted">{p.payer_email}</p>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 font-medium text-foreground">
-                        ${formatStroops(p.amount_usdc_stroops)}
-                      </td>
-                      <td className="px-3 py-2">
-                        <span
-                          className={
-                            p.status === "confirmed"
-                              ? "text-success"
-                              : "text-warning"
-                          }
-                        >
-                          {p.status === "confirmed" ? "✓ Confirmed" : "• Pending"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-function CreateLinkModal({
-  walletId,
-  token,
-  creating,
-  setCreating,
-  onClose,
-  onCreated,
-}: {
-  walletId: string;
-  token: string | null;
-  creating: boolean;
-  setCreating: (v: boolean) => void;
-  onClose: () => void;
-  onCreated: (link: PaymentLink) => void;
-}) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [redirectUrl, setRedirectUrl] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !token) return;
-    setUploading(true);
-    setError(null);
-    try {
-      await validateImage(file);
-      setImageUrl(await uploadImage(token, file));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Image upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!token || !name.trim()) return;
-    setCreating(true);
-    setError(null);
-    try {
-      const amountUsdcStroops = amount.trim() ? usdAmountToStroops(amount.trim()) : undefined;
-      if (amount.trim() && amountUsdcStroops === null) {
-        setError("Enter a valid positive amount, or leave it blank for a flexible amount.");
-        setCreating(false);
-        return;
-      }
-      const link = await createPaymentLink(asAuthToken(token), asWalletId(walletId), {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        imageUrl: imageUrl ?? undefined,
-        redirectUrl: redirectUrl.trim() || undefined,
-        amountUsdcStroops: amountUsdcStroops ?? undefined,
-      });
-      onCreated(link);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create the link.");
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  return (
-    <Modal title="Create payment link" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-foreground">
-            Image (optional)
-          </label>
-          <div className="mt-1 flex items-center gap-3">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-sunken">
-              {isTrustedImageUrl(imageUrl) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imageUrl!} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-lg text-muted">🖼</span>
-              )}
-            </div>
-            <div className="flex-1">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                disabled={uploading}
-                className="block w-full text-xs text-muted file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface-raised file:px-3 file:py-1.5 file:text-xs file:text-foreground hover:file:border-burgundy/50"
-              />
-              <p className="mt-1 text-[11px] text-muted">
-                {uploading
-                  ? "Uploading…"
-                  : imageUrl
-                    ? "Uploaded. Choose another file to replace it."
-                    : "PNG or JPG, up to 2MB."}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-foreground">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Product payment"
-            className="mt-1 w-full rounded-lg border border-border bg-surface-sunken px-3 py-2 text-sm text-foreground outline-none focus:border-burgundy/50"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-foreground">
-            Description (optional)
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Brief description of this payment link"
-            rows={2}
-            className="mt-1 w-full rounded-lg border border-border bg-surface-sunken px-3 py-2 text-sm text-foreground outline-none focus:border-burgundy/50"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-foreground">Amount (USD)</label>
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Leave empty for flexible amount"
-            className="mt-1 w-full rounded-lg border border-border bg-surface-sunken px-3 py-2 text-sm text-foreground outline-none focus:border-burgundy/50"
-          />
-          <p className="mt-1 text-[11px] text-muted">
-            Settled 1:1 in USDC. Leave empty to let the payer choose their own amount.
-          </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-foreground">
-            Redirect URL (optional)
-          </label>
-          <input
-            value={redirectUrl}
-            onChange={(e) => setRedirectUrl(e.target.value)}
-            placeholder="https://your-site.com/thank-you"
-            className="mt-1 w-full rounded-lg border border-border bg-surface-sunken px-3 py-2 text-sm text-foreground outline-none focus:border-burgundy/50"
-          />
-          <p className="mt-1 text-[11px] text-muted">
-            Where to send customers after a successful payment.
-          </p>
-        </div>
-
-        {error && (
-          <p className="rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-            {error}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-border bg-surface-raised px-4 py-2 text-sm text-foreground transition-colors hover:border-burgundy/50"
-          >
-            Cancel
-          </button>
-          <ActionButton
-            label={creating ? "Creating…" : "Create Link"}
-            disabled={!name.trim() || creating || uploading}
-            loading={creating}
-          />
-        </div>
-      </form>
-    </Modal>
   );
 }

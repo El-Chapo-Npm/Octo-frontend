@@ -3,11 +3,10 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
+import { useWallet } from "@/lib/useWallet";
 import {
-  getWallet,
   listTransactionsPage,
   displayAssetCode,
-  type WalletView,
   type Transaction,
 } from "@/lib/wallets";
 import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
@@ -32,7 +31,7 @@ export default function TransactionsPage({
   const { id } = use(params);
   const { user, token, loading, logout } = useAuth();
 
-  const [wallet, setWallet] = useState<WalletView | null>(null);
+  const { wallet } = useWallet(id);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [assetFilter, setAssetFilter] = useState<string>("all");
@@ -76,9 +75,6 @@ export default function TransactionsPage({
 
   useEffect(() => {
     if (!token) return;
-    getWallet(token, id)
-      .then(setWallet)
-      .catch(() => setWallet(null));
     load(null);
   }, [token, id, load]);
 

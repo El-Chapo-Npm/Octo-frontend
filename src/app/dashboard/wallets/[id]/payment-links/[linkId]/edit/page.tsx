@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
-import { getWallet, type WalletView } from "@/lib/wallets";
+import { useWallet } from "@/lib/useWallet";
 import { getPaymentLink, type PaymentLink } from "@/lib/payment-links";
 import { asAuthToken, asWalletId } from "@/lib/brands";
 import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
@@ -24,16 +24,13 @@ export default function EditPaymentLinkPage({
   const { id, linkId } = use(params);
   const { user, token, loading, logout } = useAuth();
   const router = useRouter();
-  const [wallet, setWallet] = useState<WalletView | null>(null);
+  const { wallet } = useWallet(id);
   const [link, setLink] = useState<PaymentLink | null>(null);
   const [error, setError] = useState<string | null>(null);
   const listHref = `/dashboard/wallets/${id}/payment-links`;
 
   useEffect(() => {
     if (!token) return;
-    getWallet(token, id)
-      .then(setWallet)
-      .catch(() => setWallet(null));
     getPaymentLink(asAuthToken(token), asWalletId(id), linkId)
       .then(setLink)
       .catch((e) => setError(e instanceof Error ? e.message : "Could not load the link."));
