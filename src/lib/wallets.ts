@@ -4,6 +4,9 @@
 
 import { apiFetch, path } from "./api";
 import { parseAmount, toApiStroops } from "./amount";
+import { pageQuery, type Paginated, type PageOpts } from "./pagination";
+
+export type { Paginated, PageOpts } from "./pagination";
 
 export type CreateWalletResponse = {
   id: string;
@@ -127,12 +130,6 @@ export function createGasTank(token: string, id: string) {
  * `undefined` and renders an empty list, which is exactly how a freshly created wallet went
  * missing from the dashboard.
  */
-export type Paginated<T> = {
-  data: T[];
-  /** Pass as `?before=` to fetch the next page; null when there are no more rows. */
-  next_cursor: string | null;
-};
-
 /** List the authenticated user's wallets (newest first). */
 export async function listWallets(token: string): Promise<WalletView[]> {
   const page = await apiFetch<Paginated<WalletView>>("/v1/wallets", { token });
@@ -180,22 +177,6 @@ export async function listTransactions(
     { token },
   );
   return page.data;
-}
-
-/** Options shared by the paginated list helpers. */
-export type PageOpts = {
-  /** Rows per page (backend default 50, max 200). */
-  limit?: number;
-  /** Cursor from the previous page's `next_cursor`; omit for the first page. */
-  before?: string | null;
-};
-
-function pageQuery(opts?: PageOpts): string {
-  const params = new URLSearchParams();
-  if (opts?.limit) params.set("limit", String(opts.limit));
-  if (opts?.before) params.set("before", opts.before);
-  const qs = params.toString();
-  return qs ? `?${qs}` : "";
 }
 
 /**

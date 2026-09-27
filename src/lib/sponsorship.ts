@@ -4,6 +4,7 @@
 
 import { apiFetch, path } from "./api";
 import { formatStroops } from "./amount";
+import { pageQuery, type PageOpts, type Paginated } from "./pagination";
 
 import type { AuthToken, WalletId } from "./brands";
 
@@ -54,11 +55,7 @@ export type SponsoredTransaction = {
   created_at: string;
 };
 
-export type SponsoredTxnPage = {
-  data: SponsoredTransaction[];
-  /** Pass back as `cursor` to fetch the next page; null when there are no more. */
-  next_cursor: string | null;
-};
+export type SponsoredTxnPage = Paginated<SponsoredTransaction>;
 
 /**
  * List a wallet's sponsored transactions, newest first (50 per page).
@@ -67,12 +64,10 @@ export type SponsoredTxnPage = {
 export function listSponsoredTransactions(
   token: AuthToken,
   walletId: WalletId,
-  cursor?: string,
+  opts?: PageOpts,
 ) {
-  const params = new URLSearchParams({ limit: "50" });
-  if (cursor) params.set("before", cursor);
   return apiFetch<SponsoredTxnPage>(
-    path`/v1/wallets/${walletId}/sponsored-transactions` + `?${params.toString()}`,
+    path`/v1/wallets/${walletId}/sponsored-transactions` + pageQuery({ limit: opts?.limit ?? 50, before: opts?.before }),
     { token },
   );
 }

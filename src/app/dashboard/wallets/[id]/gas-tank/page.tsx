@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
-import { getWallet, type WalletView } from "@/lib/wallets";
+import { useWallet } from "@/lib/useWallet";
 import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
 import { DashboardBackground } from "@/components/dashboard/DashboardBackground";
 import { GasTankProvision } from "@/components/gas/GasTankProvision";
@@ -12,12 +12,7 @@ import { PageSpinner } from "@/components/OctoSpinner";
 export default function GasTankPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, token, loading, logout } = useAuth();
-  const [wallet, setWallet] = useState<WalletView | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    getWallet(token, id).then(setWallet).catch(() => {});
-  }, [token, id]);
+  const { wallet } = useWallet(id);
 
   if (loading || !user || !token) return <PageSpinner />;
 

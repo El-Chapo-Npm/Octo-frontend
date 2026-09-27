@@ -44,7 +44,7 @@ export function SponsoredTransactionsTable({
     if (!cursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const page = await listSponsoredTransactions(asAuthToken(token), asWalletId(walletId), cursor);
+      const page = await listSponsoredTransactions(asAuthToken(token), asWalletId(walletId), { before: cursor });
       // Append — never replace the existing rows.
       setRows((prev) => [...(prev ?? []), ...page.data]);
       setCursor(page.next_cursor);

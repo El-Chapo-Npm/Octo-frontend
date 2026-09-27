@@ -3,11 +3,10 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
+import { useWallet } from "@/lib/useWallet";
 import {
-  getWallet,
   getBalances,
   USDC_TESTNET,
-  type WalletView,
   type Balance,
 } from "@/lib/wallets";
 import { WalletSidebar } from "@/components/dashboard/WalletSidebar";
@@ -29,7 +28,7 @@ export default function AssetsPage({
   const { id } = use(params);
   const { user, token, loading, logout } = useAuth();
 
-  const [wallet, setWallet] = useState<WalletView | null>(null);
+  const { wallet } = useWallet(id);
   const [balances, setBalances] = useState<Balance[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showUsd, setShowUsd] = useState(false);
@@ -51,7 +50,6 @@ export default function AssetsPage({
 
   useEffect(() => {
     if (!token) return;
-    getWallet(token, id).then(setWallet).catch(() => setWallet(null));
     getBalances(token, id)
       .then((b) => {
         setBalances(b);

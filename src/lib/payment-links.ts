@@ -5,6 +5,7 @@
 import { apiFetch } from "./api";
 import { parseAmount, toApiStroops } from "./amount";
 import type { AuthToken, WalletId } from "./brands";
+import { pageQuery, type Paginated, type PageOpts } from "./pagination";
 
 export type PaymentLink = {
   id: string;
@@ -22,11 +23,6 @@ export type PaymentLink = {
   url: string;
 };
 
-type Paginated<T> = {
-  data: T[];
-  next_cursor: string | null;
-};
-
 export async function listPaymentLinks(
   token: AuthToken,
   walletId: WalletId,
@@ -42,14 +38,10 @@ export async function listPaymentLinks(
 export function listPaymentLinksPage(
   token: AuthToken,
   walletId: WalletId,
-  opts?: { limit?: number; before?: string | null },
-): Promise<{ data: PaymentLink[]; next_cursor: string | null }> {
-  const params = new URLSearchParams();
-  if (opts?.limit) params.set("limit", String(opts.limit));
-  if (opts?.before) params.set("before", opts.before);
-  const qs = params.toString();
-  return apiFetch<{ data: PaymentLink[]; next_cursor: string | null }>(
-    `/v1/wallets/${walletId}/payment-links${qs ? `?${qs}` : ""}`,
+  opts?: PageOpts,
+): Promise<Paginated<PaymentLink>> {
+  return apiFetch<Paginated<PaymentLink>>(
+    `/v1/wallets/${walletId}/payment-links${pageQuery(opts)}`,
     { token },
   );
 }
@@ -70,14 +62,10 @@ export function listPaymentLinkPayments(
   token: AuthToken,
   walletId: WalletId,
   linkId: string,
-  opts?: { limit?: number; before?: string | null },
-): Promise<{ data: PaymentLinkPayment[]; next_cursor: string | null }> {
-  const params = new URLSearchParams();
-  if (opts?.limit) params.set("limit", String(opts.limit));
-  if (opts?.before) params.set("before", opts.before);
-  const qs = params.toString();
-  return apiFetch<{ data: PaymentLinkPayment[]; next_cursor: string | null }>(
-    `/v1/wallets/${walletId}/payment-links/${linkId}/payments${qs ? `?${qs}` : ""}`,
+  opts?: PageOpts,
+): Promise<Paginated<PaymentLinkPayment>> {
+  return apiFetch<Paginated<PaymentLinkPayment>>(
+    `/v1/wallets/${walletId}/payment-links/${linkId}/payments${pageQuery(opts)}`,
     { token },
   );
 }
